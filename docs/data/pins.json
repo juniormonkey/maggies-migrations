@@ -1,0 +1,90 @@
+[
+  {
+    "id": "legacy-1",
+    "place_name": "Muir Woods National Monument",
+    "lat": 37.8970199,
+    "lng": -122.5811177,
+    "caption": "",
+    "author": "Curiosity Guild",
+    "posted_at": "2026-10-19",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-1-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-1-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-1-3.jpg"
+    ]
+  },
+  {
+    "id": "legacy-2",
+    "place_name": "Walt Disney World® Resort",
+    "lat": 28.3771857,
+    "lng": -81.57074,
+    "caption": "",
+    "author": "Curiosity Guild",
+    "posted_at": "2026-10-19",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-2-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-2-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-2-3.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-2-4.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-2-5.jpg"
+    ]
+  },
+  {
+    "id": "legacy-3",
+    "place_name": "Epcot",
+    "lat": 28.3764687,
+    "lng": -81.5494034,
+    "caption": "",
+    "author": "Curiosity Guild",
+    "posted_at": "2026-10-19",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-3-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-3-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-3-3.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-3-4.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-3-5.jpg"
+    ]
+  },
+  {
+    "id": "legacy-4",
+    "place_name": "San Francisco International Airport",
+    "lat": 37.6191145,
+    "lng": -122.3816274,
+    "caption": "",
+    "author": "Curiosity Guild",
+    "posted_at": "2026-10-19",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-4-1.jpg"
+    ]
+  },
+  {
+    "id": "legacy-5",
+    "place_name": "Mount Eliza",
+    "lat": -38.1872268,
+    "lng": 145.0920162,
+    "caption": "",
+    "author": "Curiosity Guild",
+    "posted_at": "2026-10-19",
+    "layer": "2026",
+    "media": [
+      "https://www.youtube.com/watch?v=1oofSFaYUrk"
+    ]
+  },
+  {
+    "id": "legacy-6",
+    "place_name": "Utrecht",
+    "lat": 52.0919255,
+    "lng": 5.1229572,
+    "caption": "Here we see Maggie feeling a bit down in the mouth in Utrecht at a castle.",
+    "author": "Curiosity Guild",
+    "posted_at": "2026-10-19",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/legacy-6-1.jpg"
+    ]
+  }
+]

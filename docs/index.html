@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Maggie's Migrations | Curiosity Guild</title>
+  <link
+    rel="stylesheet"
+    href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+    crossorigin=""
+  >
+  <link rel="stylesheet" href="./styles.css">
+</head>
+<body>
+  <div id="app" class="app-shell">
+    <aside id="sidebar" class="sidebar" aria-label="Locations list">
+      <header class="sidebar-header">
+        <div class="title-row">
+          <div>
+            <h1 id="map-title">Maggie's Migrations</h1>
+            <p id="map-subtitle" class="subtitle">Where has Maggie flown to recently?</p>
+          </div>
+          <span id="pin-count" class="badge" aria-live="polite">0 pins</span>
+        </div>
+        <div class="search-row">
+          <input
+            id="search-input"
+            type="search"
+            placeholder="Search places or notes..."
+            aria-label="Filter locations"
+          >
+        </div>
+      </header>
+      <ul id="pin-list" class="pin-list"></ul>
+      <footer class="sidebar-footer">
+        <a href="./data/pins.csv" download="maggies-migrations.csv">Download CSV</a>
+        <span id="sync-status" class="sync-status" aria-live="polite"></span>
+      </footer>
+    </aside>
+
+    <main class="map-stage">
+      <button
+        id="drawer-toggle"
+        class="drawer-toggle"
+        type="button"
+        aria-expanded="true"
+        aria-controls="sidebar"
+      >Locations</button>
+      <div id="map" role="region" aria-label="Interactive map of Maggie sightings"></div>
+    </main>
+  </div>
+
+  <dialog id="lightbox" closedby="any" aria-labelledby="lightbox-title">
+    <div class="lightbox-frame">
+      <header class="lightbox-header">
+        <div class="lightbox-heading">
+          <h2 id="lightbox-title"></h2>
+          <p id="lightbox-meta" class="lightbox-meta"></p>
+        </div>
+        <form method="dialog">
+          <button type="submit" class="close-btn" aria-label="Close media viewer" autofocus>&times;</button>
+        </form>
+      </header>
+
+      <div class="lightbox-stage">
+        <button id="prev-slide" class="nav-btn nav-prev" type="button" aria-label="Previous item">&#8249;</button>
+        <div id="lightbox-slides" class="lightbox-slides"></div>
+        <button id="next-slide" class="nav-btn nav-next" type="button" aria-label="Next item">&#8250;</button>
+      </div>
+
+      <footer class="lightbox-footer">
+        <p id="lightbox-caption" class="lightbox-caption"></p>
+        <div class="lightbox-controls">
+          <span id="slide-counter" class="slide-counter"></span>
+          <a id="external-media-link" class="external-link" target="_blank" rel="noopener noreferrer" hidden>Open original &#8599;</a>
+        </div>
+      </footer>
+    </div>
+  </dialog>
+
+  <script
+    src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+    integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+    crossorigin=""
+  ></script>
+  <script src="./app.js" type="module"></script>
+</body>
+</html>
