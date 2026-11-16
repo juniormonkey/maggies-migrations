@@ -193,6 +193,76 @@ class TestSyncDiscord(unittest.TestCase):
         self.assertIn("https://discord.com/channels/1/2/10", alert["body"])
         self.assertIn("https://juniormonkey.github.io/maggies-migrations/photos/discord-10-1.jpg", alert["body"])
 
+    def test_split_into_chunks_keeps_same_author_followup_together(self) -> None:
+        base_ts = dt.datetime(2026, 11, 16, 10, 0, tzinfo=dt.timezone.utc)
+        msgs = []
+        for idx in range(25):
+            msgs.append(
+                {
+                    "id": str(100 + idx),
+                    "timestamp": (base_ts + dt.timedelta(minutes=idx * 5)).isoformat(),
+                    "author": {"id": f"user-{idx}"},
+                    "content": f"post {idx}",
+                    "attachments": [],
+                }
+            )
+        # Index 25 is a follow-up from user-24 two minutes after message 24
+        msgs.append(
+            {
+                "id": "125",
+                "timestamp": (base_ts + dt.timedelta(minutes=24 * 5 + 2)).isoformat(),
+                "author": {"id": "user-24"},
+                "content": "That was in Golden Gate Park!",
+                "attachments": [],
+            }
+        )
+        # Index 26 is from another user
+        msgs.append(
+            {
+                "id": "126",
+                "timestamp": (base_ts + dt.timedelta(minutes=24 * 5 + 3)).isoformat(),
+                "author": {"id": "user-99"},
+                "content": "Another location",
+                "attachments": [],
+            }
+        )
+
+        chunks = sync_discord.split_into_chunks(msgs, target_size=25, max_size=35)
+        self.assertEqual(len(chunks), 2)
+        self.assertEqual([m["id"] for m in chunks[0][-2:]], ["124", "125"])
+        self.assertEqual([m["id"] for m in chunks[1]], ["126"])
+
+    def test_gemini_post_retries_on_timeout_and_uses_header(self) -> None:
+        import requests
+
+        ok_resp = mock.MagicMock()
+        ok_resp.status_code = 200
+        ok_resp.json.return_value = {
+            "candidates": [{"content": {"parts": [{"text": "[]"}]}}]
+        }
+        msgs = [
+            {
+                "id": "1",
+                "timestamp": "2026-11-16T10:00:00+00:00",
+                "author": {"id": "u1", "username": "Alice"},
+                "content": "hi",
+                "attachments": [],
+            }
+        ]
+        with (
+            mock.patch("sync_discord.time.sleep") as mock_sleep,
+            mock.patch("sync_discord.requests.post", side_effect=[requests.ReadTimeout("timeout"), ok_resp]) as mock_post,
+        ):
+            res = sync_discord.call_gemini_group_sightings(msgs, "secret-key")
+
+        self.assertEqual(res, [])
+        self.assertEqual(mock_post.call_count, 2)
+        mock_sleep.assert_called_once()
+        _, kwargs = mock_post.call_args
+        self.assertEqual(mock_post.call_args.args[0], sync_discord.GEMINI_API)
+        self.assertEqual(kwargs["headers"]["x-goog-api-key"], "secret-key")
+        self.assertEqual(kwargs["json"]["generationConfig"]["thinkingConfig"], {"thinkingBudget": 512})
+
 
 if __name__ == "__main__":
     unittest.main()

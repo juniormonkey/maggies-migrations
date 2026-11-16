@@ -164,6 +164,46 @@ def resize_for_vision(jpeg_bytes: bytes, max_dim: int = 512) -> str:
         return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
+def _gemini_post(body: dict[str, Any], api_key: str, timeout: int = 180) -> dict[str, Any]:
+    """POST to Gemini generateContent using header auth with timeout/429/5xx retries."""
+    headers = {"x-goog-api-key": api_key, "Content-Type": "application/json"}
+    retryable_statuses = {429, 500, 502, 503, 504}
+    last_exc: Exception | None = None
+
+    for attempt in range(4):
+        try:
+            resp = requests.post(GEMINI_API, headers=headers, json=body, timeout=timeout)
+        except (requests.Timeout, requests.ConnectionError) as exc:
+            last_exc = exc
+            if attempt < 3:
+                time.sleep(5.0 * (attempt + 1))
+                continue
+            raise
+
+        if resp.status_code in retryable_statuses and attempt < 3:
+            if resp.status_code == 429:
+                retry_hdr = float(resp.headers.get("Retry-After", 0) or 0)
+                delay = max(retry_hdr, 15.0 * (attempt + 1))
+            else:
+                delay = 5.0 * (attempt + 1)
+            time.sleep(delay)
+            continue
+
+        resp.raise_for_status()
+        return resp.json()
+
+    assert last_exc is not None
+    raise last_exc
+
+
+def _parse_gemini_json(resp_json: dict[str, Any]) -> Any:
+    """Extract and parse JSON text from a Gemini generateContent response."""
+    raw_text = resp_json["candidates"][0]["content"]["parts"][0]["text"].strip()
+    if raw_text.startswith("```"):
+        raw_text = re.sub(r"^```(?:json)?\s*|\s*```$", "", raw_text, flags=re.DOTALL).strip()
+    return json.loads(raw_text)
+
+
 def call_gemini_group_sightings(messages: list[dict[str, Any]], api_key: str) -> list[dict[str, Any]]:
     """Group chronological Discord messages into sightings and extract place/caption."""
     if not messages:
@@ -203,18 +243,23 @@ def call_gemini_group_sightings(messages: list[dict[str, Any]], api_key: str) ->
         f"Messages JSON:\n{json.dumps(compact, ensure_ascii=False)}"
     )
 
-    resp = requests.post(
-        f"{GEMINI_API}?key={api_key}",
-        json={
+    resp_json = _gemini_post(
+        {
             "contents": [{"parts": [{"text": prompt}]}],
-            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.1},
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "temperature": 0.1,
+                "thinkingConfig": {"thinkingBudget": 512},
+            },
         },
-        timeout=60,
+        api_key,
+        timeout=180,
     )
-    resp.raise_for_status()
-    candidates = resp.json().get("candidates", [])
-    raw_text = candidates[0]["content"]["parts"][0]["text"]
-    parsed = json.loads(raw_text)
+    parsed = _parse_gemini_json(resp_json)
+    if isinstance(parsed, dict):
+        first_list = next((v for v in parsed.values() if isinstance(v, list)), None)
+        if first_list is not None:
+            parsed = first_list
     if not isinstance(parsed, list):
         raise ValueError(f"Expected JSON list from Gemini, got {type(parsed)}")
     return [item for item in parsed if item.get("is_sighting", True)]
@@ -227,9 +272,8 @@ def infer_location_from_photo(jpeg_b64: str, api_key: str) -> tuple[str, str]:
         "street sign, museum sign, airport code, or recognizable monument that uniquely identifies the city/place, "
         'return {"place_name": "...", "location_query": "..."}. If uncertain, return {"place_name": "", "location_query": ""}.'
     )
-    resp = requests.post(
-        f"{GEMINI_API}?key={api_key}",
-        json={
+    resp_json = _gemini_post(
+        {
             "contents": [
                 {
                     "parts": [
@@ -238,13 +282,18 @@ def infer_location_from_photo(jpeg_b64: str, api_key: str) -> tuple[str, str]:
                     ]
                 }
             ],
-            "generationConfig": {"responseMimeType": "application/json", "temperature": 0.1},
+            "generationConfig": {
+                "responseMimeType": "application/json",
+                "temperature": 0.1,
+                "thinkingConfig": {"thinkingBudget": 512},
+            },
         },
-        timeout=60,
+        api_key,
+        timeout=120,
     )
-    resp.raise_for_status()
-    raw = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
-    data = json.loads(raw)
+    data = _parse_gemini_json(resp_json)
+    if not isinstance(data, dict):
+        return "", ""
     return str(data.get("place_name") or "").strip(), str(data.get("location_query") or "").strip()
 
 
@@ -423,17 +472,61 @@ def write_static_cache(pins: list[dict[str, Any]], data_dir: Path) -> None:
             )
 
 
+def split_into_chunks(
+    messages: list[dict[str, Any]],
+    target_size: int = 25,
+    max_size: int = 35,
+) -> list[list[dict[str, Any]]]:
+    """Split messages into chunks without severing an author's follow-up text or replies."""
+    if not messages:
+        return []
+    chunks: list[list[dict[str, Any]]] = []
+    current: list[dict[str, Any]] = []
+    current_ids: set[str] = set()
+
+    for msg in messages:
+        if len(current) >= target_size:
+            prev = current[-1]
+            prev_author = str((prev.get("author") or {}).get("id") or "")
+            nxt_author = str((msg.get("author") or {}).get("id") or "")
+            reply_id = str((msg.get("message_reference") or {}).get("message_id") or "")
+            within_window = (
+                dt.datetime.fromisoformat(msg["timestamp"])
+                - dt.datetime.fromisoformat(prev["timestamp"])
+            ) <= dt.timedelta(minutes=30)
+            keep_together = (
+                (bool(prev_author) and prev_author == nxt_author and within_window)
+                or (bool(reply_id) and reply_id in current_ids)
+            )
+            if not keep_together or len(current) >= max_size:
+                chunks.append(current)
+                current = []
+                current_ids = set()
+
+        current.append(msg)
+        current_ids.add(str(msg["id"]))
+
+    if current:
+        chunks.append(current)
+    return chunks
+
+
 def process_messages_in_chunks(
     messages: list[dict[str, Any]],
     api_key: str,
-    chunk_size: int = 40,
+    target_size: int = 25,
+    max_size: int = 35,
 ) -> list[dict[str, Any]]:
-    """Run Gemini grouping across chunks of up to `chunk_size` messages."""
+    """Run Gemini grouping across author-aware message chunks."""
+    chunks = split_into_chunks(messages, target_size=target_size, max_size=max_size)
     all_sightings: list[dict[str, Any]] = []
-    for i in range(0, len(messages), chunk_size):
-        chunk = messages[i : i + chunk_size]
+    total = len(chunks)
+    for idx, chunk in enumerate(chunks, start=1):
+        print(f"Parsing chunk {idx}/{total} ({len(chunk)} messages)...", flush=True)
         grouped = call_gemini_group_sightings(chunk, api_key)
         all_sightings.extend(ensure_all_media_posts_captured(chunk, grouped))
+        if idx < total:
+            time.sleep(2.0)
     return all_sightings
 
 
@@ -478,9 +571,15 @@ def run_sync(repo_root: Path) -> None:
 
     raw_messages = fetch_discord_messages(channel_id, discord_token, last_message_id)
     messages, new_cursor = split_tail_holdback(raw_messages)
+    print(
+        f"Fetched {len(raw_messages)} Discord message(s); processing {len(messages)} "
+        f"(retry_geocoding={len(retry_geocoding)}).",
+        flush=True,
+    )
 
     msg_by_id = {m["id"]: m for m in messages}
     sightings = process_messages_in_chunks(messages, gemini_key) if messages else []
+    print(f"Identified {len(sightings)} sighting candidate(s).", flush=True)
 
     new_rows: list[dict[str, Any]] = []
     for s in sightings:
@@ -522,11 +621,16 @@ def run_sync(repo_root: Path) -> None:
         location_query = str(s.get("location_query") or "").strip()
 
         if not location_query and first_jpeg_bytes is not None:
-            vis_place, vis_query = infer_location_from_photo(resize_for_vision(first_jpeg_bytes), gemini_key)
-            if vis_query:
-                place_name = place_name or vis_place
-                location_query = vis_query
+            try:
+                vis_place, vis_query = infer_location_from_photo(resize_for_vision(first_jpeg_bytes), gemini_key)
+                if vis_query:
+                    place_name = place_name or vis_place
+                    location_query = vis_query
+            except Exception as exc:
+                print(f"Vision fallback skipped for {pin_id}: {exc}", flush=True)
 
+        if location_query:
+            print(f"Geocoding {pin_id}: {location_query}", flush=True)
         lat, lng = geocoder.geocode(location_query) if location_query else (None, None)
         if lat is not None and lng is not None:
             status = "pending"
