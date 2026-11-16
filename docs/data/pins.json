@@ -86,5 +86,510 @@
     "media": [
       "https://juniormonkey.github.io/maggies-migrations/photos/legacy-6-1.jpg"
     ]
+  },
+  {
+    "id": "discord-1500228442753335408",
+    "place_name": "Sesame Place San Diego",
+    "lat": 32.5874265,
+    "lng": -117.0118326,
+    "caption": "Maggie got to be a guest on Sesame Street today.",
+    "author": "Qu1nlan",
+    "posted_at": "2026-05-02",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1500228442753335408-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1500228442753335408-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1500228547782906126-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1500645746679087266",
+    "place_name": "San Diego Zoo Safari Park",
+    "lat": 33.0981185,
+    "lng": -116.9965363,
+    "caption": "Today Maggie got some selfies with Birrarung, the ONLY PLATYPUS OUTSIDE OF AUSTRALIA. He lives in a place called \"Maggie's Ponds\", within the San Diego Zoo Safari Park. The selfies are by necessity dark and blurry, Birrarung (like most or in fact all platypuses) is nocturnal so his habitat is kept dark to keep him cared for best.",
+    "author": "Qu1nlan",
+    "posted_at": "2026-05-03",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1500645746679087266-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1500645746679087266-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1500645746679087266-3.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1500645746679087266-4.jpg"
+    ]
+  },
+  {
+    "id": "discord-1513660503476535478",
+    "place_name": "San Francisco",
+    "lat": 37.77493,
+    "lng": -122.41942,
+    "caption": "Maggie attending a seminar with Dr. Emily Wilson on her translation of the Illiad (with a little cat, Carmilla).",
+    "author": "sonnetscribbler",
+    "posted_at": "2026-06-08",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1513660503476535478-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1519483100067926217",
+    "place_name": "Honolulu",
+    "lat": 21.304547,
+    "lng": -157.855676,
+    "caption": "Maggie with dubious signage in Honolulu.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-06-24",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1519483100067926217-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1519951350148894760",
+    "place_name": "Honolulu",
+    "lat": 21.304547,
+    "lng": -157.855676,
+    "caption": "1. Maggie with cinnamon roll that took two humans 3 meals to finish.\n2. Maggie gone native with extra fleurs on old pumice steps.\n3. Approaching the trailhead at Diamond Head in Honolulu.\n4. Looking out the observation lookout at Fort Ruger.\n5. Overlooking Waikiki.\n6. With a delicious pineapple drink post-hike at Diamond Head.\n7. That a bird photo bombed Maggie's beach shot is great, but did it have to STEAL THE FOCUS???\n8. Maggie at Kaimana Beach, sans pigeon.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-06-26",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1519951350148894760-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1519951350148894760-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1519951350148894760-3.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1519951350148894760-4.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1519951350148894760-5.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1519951350148894760-6.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1519951350148894760-7.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1519951350148894760-8.jpg"
+    ]
+  },
+  {
+    "id": "discord-1520249694436196534",
+    "place_name": "La Mariana",
+    "lat": 21.3218804,
+    "lng": -157.8931598,
+    "caption": "Having a tasty fruity drink at a tiki bar. That was La Mariana.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-06-27",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1520249694436196534-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1520326124905959577",
+    "place_name": "Honolulu",
+    "lat": 21.304547,
+    "lng": -157.855676,
+    "caption": "Karaoke time!",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-06-27",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1520326124905959577-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1520556584588017775",
+    "place_name": "San Francisco",
+    "lat": 37.7792929,
+    "lng": -122.4192601,
+    "caption": "Wicked Maggie says Happy Pride! 🏳️‍🌈",
+    "author": "ContextSans",
+    "posted_at": "2026-06-27",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1520556584588017775-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1525633912473387180",
+    "place_name": "Cable Car Museum, San Francisco",
+    "lat": 37.7947602,
+    "lng": -122.4118528,
+    "caption": "Maggie at the Cable Car Museum.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-07-11",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1525633912473387180-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1525633912473387180-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1525633912473387180-3.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1525633912473387180-4.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1525633912473387180-5.jpg"
+    ]
+  },
+  {
+    "id": "discord-1528497133873922260",
+    "place_name": "Curitiba, Brasil",
+    "lat": -25.4295963,
+    "lng": -49.2712724,
+    "caption": "Maggie's first day in Curitiba, Brasil. She checked out a nifty Sunday street market, a swell map, the ruins of the San Francisco of Paula church, and was dwarfed by the colorful Curitiba sign in the 200th anniversary memorial and museum. ☺️",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-07-19",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1528497133873922260-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1528497133873922260-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1528497133873922260-3.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1528497133873922260-4.jpg"
+    ]
+  },
+  {
+    "id": "discord-1528869548420497418",
+    "place_name": "Paço da Liberdade, Curitiba, Brasil",
+    "lat": 34.0928092,
+    "lng": -118.3286614,
+    "caption": "Curitiba, Brasil. With capy fren and hanging out on the Paço da Liberdade.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-07-20",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1528869548420497418-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1528869548420497418-2.jpg"
+    ]
+  },
+  {
+    "id": "discord-1529237764271374486",
+    "place_name": "Opera de Arame and Parque Tanguá, Curitiba, Brasil",
+    "lat": -25.384557,
+    "lng": -49.27617,
+    "caption": "Maggie at Opera de Arame and with the scenic waterfall at Parque Tanguá (Curitiba, Brasil)",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-07-21",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1529237764271374486-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1529237764271374486-2.jpg"
+    ]
+  },
+  {
+    "id": "discord-1529680439386706073",
+    "place_name": "Curitiba, Brasil",
+    "lat": -25.4295963,
+    "lng": -49.2712724,
+    "caption": "Last day in Curitiba - it rained all day so we only went out for a short walk at night.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-07-23",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1529680439386706073-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1529680439386706073-2.jpg"
+    ]
+  },
+  {
+    "id": "discord-1533650041598771292",
+    "place_name": "Great Salt Flats",
+    "lat": 40.778745,
+    "lng": -113.835204,
+    "caption": "Maggie at the Great Salt Flats.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-08-03",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1533650041598771292-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1535359931577008261",
+    "place_name": "Dead Horse Point, Utah",
+    "lat": 38.5142197,
+    "lng": -109.7387738,
+    "caption": "Maggie at Dead Horse Point, Utah.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-08-07",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1535359931577008261-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1535359931577008261-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1535359931577008261-3.jpg"
+    ]
+  },
+  {
+    "id": "discord-1536118333693497394",
+    "place_name": "Bull Canyon Dinosaur Tracks, Utah",
+    "lat": 38.615944,
+    "lng": -109.223548,
+    "caption": "Maggie at Bull Canyon Dinosaur Tracks, Utah. (Maggie for footprint scale.)",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-08-09",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536118333693497394-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536118333693497394-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536118333693497394-3.jpg"
+    ]
+  },
+  {
+    "id": "discord-1536855397686579391",
+    "place_name": "New York City",
+    "lat": 40.7578694,
+    "lng": -73.9845006,
+    "caption": "Maggie enjoyed Oh Mary!",
+    "author": "sonnetscribbler",
+    "posted_at": "2026-08-11",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536855397686579391-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1536855625697329164",
+    "place_name": "Ashmolean Museum",
+    "lat": 51.7554961,
+    "lng": -1.2602575,
+    "caption": "Maggie & Athena at the Ashmolean",
+    "author": "sonnetscribbler",
+    "posted_at": "2026-08-11",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536855625697329164-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1536855911954649220",
+    "place_name": "London",
+    "lat": 51.50902,
+    "lng": -0.0683574,
+    "caption": "Migrating with the other birds in MC Escher's work",
+    "author": "sonnetscribbler",
+    "posted_at": "2026-08-11",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536855911954649220-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536855911954649220-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536855961191325727-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536856056213274644-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1536856345658134628",
+    "place_name": "V&A Museum",
+    "lat": 51.4968838,
+    "lng": -0.1716372,
+    "caption": "And enjoying some Schiaparelli at the V&A",
+    "author": "sonnetscribbler",
+    "posted_at": "2026-08-11",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536856345658134628-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1536921403960467566",
+    "place_name": "Goblin Valley, Utah",
+    "lat": 38.5981639,
+    "lng": -110.6999678,
+    "caption": "Goblin Valley, Utah.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-08-12",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1536921403960467566-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1537271455354458112",
+    "place_name": "Utah",
+    "lat": 39.4225192,
+    "lng": -111.714358,
+    "caption": "Maggie is currently staying in a dome room somewhere in the middle of Utah. It is thundering outside the room. [ba dum tish]",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-08-13",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1537271455354458112-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1537869991246958632",
+    "place_name": "Utah",
+    "lat": 39.4225192,
+    "lng": -111.714358,
+    "caption": "Why yes, Maggie is a Cocteau Twins fan (and was listening to the album when this photo was taken - In Utah).",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-08-14",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1537869991246958632-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1538652695123198013",
+    "place_name": "Shedd Aquarium, Chicago",
+    "lat": 41.8676361,
+    "lng": -87.6136789,
+    "caption": "Maggie here, reporting live from the Shedd Aquarium in Chicago, here to remind you that 18th century Brits had a genuinely freaky sexual fascination with electric eels!",
+    "author": "Qu1nlan",
+    "posted_at": "2026-08-16",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1538652695123198013-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1538989128266547250",
+    "place_name": "International Museum of Surgical Science, Chicago",
+    "lat": 41.910153,
+    "lng": -87.6269402,
+    "caption": "Maggie took a trip today to the International Museum of Surgical Science in Chicago. Here she is pictured with: * A scale model of the anatomical theatre at the University of Padua * Jars of kidney stones and urinary stones, and a gall stone * A bone saw (lightly used)",
+    "author": "Qu1nlan",
+    "posted_at": "2026-08-17",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1538989128266547250-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1538989128266547250-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1538989128266547250-3.jpg"
+    ]
+  },
+  {
+    "id": "discord-1539437382556852276",
+    "place_name": "Field Museum, Chicago",
+    "lat": 41.8662215,
+    "lng": -87.6168913,
+    "caption": "Today, Maggie went to the Field Museum in Chicago to visit SUE (they/them), the biggest and most completely preserved T-Rex (see her pictured here with the Field Museum's honorary curator, probably: Blathers the museum curator from Animal Crossing). And, far importantly to my nerdy millennial pokérapping on stage ass, she went to the Pokemon Fossil Museum at the Field - a tour of ancient Pokémon reproductions, its first time outside of Asia!!",
+    "author": "Qu1nlan",
+    "posted_at": "2026-08-19",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1539437382556852276-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1539437382556852276-2.jpg"
+    ]
+  },
+  {
+    "id": "discord-1540096492482859008",
+    "place_name": "House on the Rock, Wisconsin",
+    "lat": 43.1001547,
+    "lng": -90.1357741,
+    "caption": "Today, Maggie visited the House on the Rock - a roadside attraction in the middle of nowhere Wisconsin that is extremely difficult to describe, but \"mid-century fever dream artifact-stuffed megacomplex\" may scratch the surface. She's pictured here in front of one of the attraction's hundreds of self-playing instruments, fleeing from a three-story-tall whale monster that takes up most of an entire building, and standing with her friend Shadow Moon in front of the world's largest carousel (which contains ZERO horses).",
+    "author": "Qu1nlan",
+    "posted_at": "2026-08-20",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1540096492482859008-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1540096492482859008-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1540096492482859008-3.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1540096492482859008-4.jpg"
+    ]
+  },
+  {
+    "id": "discord-1540803263924805775",
+    "place_name": "Spam Museum, Austin, Minnesota",
+    "lat": 43.6694629,
+    "lng": -92.9744136,
+    "caption": "Today Maggie and friends visited the Spam Museum in Austin, Minnesota.",
+    "author": "Qu1nlan",
+    "posted_at": "2026-08-22",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1540803263924805775-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1540803263924805775-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1540803263924805775-3.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1540803263924805775-4.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1540803263924805775-5.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1540803263924805775-6.jpg"
+    ]
+  },
+  {
+    "id": "discord-1545225080781676564",
+    "place_name": "Albuquerque",
+    "lat": 35.0841034,
+    "lng": -106.650985,
+    "caption": "Maggie did some obligatory Albuquerque tourism today.",
+    "author": "Qu1nlan",
+    "posted_at": "2026-09-04",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1545225080781676564-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1545225080781676564-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1545225080781676564-3.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1545225080781676564-4.jpg"
+    ]
+  },
+  {
+    "id": "discord-1545847295491178580",
+    "place_name": "Roswell, New Mexico",
+    "lat": 33.3943282,
+    "lng": -104.5229518,
+    "caption": "Maggie and I had a fantastic time in Roswell, New Mexico",
+    "author": "Qu1nlan",
+    "posted_at": "2026-09-05",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1545847295491178580-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1545847295491178580-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1545847295491178580-3.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1545847295491178580-4.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1545847295491178580-5.jpg"
+    ]
+  },
+  {
+    "id": "discord-1555067638730989708",
+    "place_name": "Melbourne",
+    "lat": -37.8142454,
+    "lng": 144.9631732,
+    "caption": "So, uh, Maggie's in Melbourne again.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-10-01",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1555067638730989708-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1555304687882739772",
+    "place_name": "Koori Heritage Trust, Melbourne",
+    "lat": -37.8142454,
+    "lng": 144.9631732,
+    "caption": "Maggie with hot chocolate and a marshmallow nearly as big as her. At the Koori Heritage Trust, and with a single fish and chip. Now if it weren't so rainy in Melbourne...",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-10-01",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1555304687882739772-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1555304687882739772-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1555304687882739772-3.jpg"
+    ]
+  },
+  {
+    "id": "discord-1555417253745266748",
+    "place_name": "The Edge, Melbourne",
+    "lat": -37.7846067,
+    "lng": 144.8922477,
+    "caption": "Maggie survived the Edge, 88 floors above Melbourne. As she is a bird, she didn't see what the big deal was or why I might have been nervous about the glass floor.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-10-02",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1555417253745266748-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1556102034908778556",
+    "place_name": "Crown Gas Brigade, Southbank, Melbourne",
+    "lat": -37.8142454,
+    "lng": 144.9631732,
+    "caption": "Last shots of Maggie in Melbourne: With new buddy, Jiji, who is also a world traveler; with fire, courtesy of the Crown Gas Brigade in Southbank.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-10-04",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1556102034908778556-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1556102034908778556-2.jpg"
+    ]
+  },
+  {
+    "id": "discord-1561100515570487367",
+    "place_name": "Ocean Beach",
+    "lat": 37.759392,
+    "lng": -122.510734,
+    "caption": "Maggie doing a \"no kings\" at Ocean Beach today.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-10-17",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1561100515570487367-1.jpg"
+    ]
   }
 ]
