@@ -170,7 +170,7 @@ function handleGetState_() {
   const retryGeocoding = rows
     .filter(
       (r) =>
-        r.status === 'needs_geocoding' &&
+        (r.status === 'needs_geocoding' || r.status === 'pending') &&
         r.location_query &&
         (r.lat === '' || r.lng === '' || Number.isNaN(Number(r.lat)) || Number.isNaN(Number(r.lng)))
     )
