@@ -5,7 +5,7 @@ Auto-updating interactive map for [curiosityguild.org/maggie](https://www.curios
 ## Architecture
 
 1. **GitHub Actions (`.github/workflows/sync.yml`)** runs every 6 hours (or manually via `workflow_dispatch`), fetches new messages from Discord, downloads & optimizes photos into `docs/photos/`, parses free-form posts with Gemini 2.5 Flash, geocodes with Nominatim, and posts new rows to Google Sheets.
-2. **Google Sheets + Apps Script (`apps_script/Code.gs`)** stores all pins. `status = approved` rows appear live on the map (`doGet`). New `pending` / `needs_geocoding` rows email the Sheet owner.
+2. **Google Sheets + Apps Script (`apps_script/Code.gs`)** stores all pins using `@OnlyCurrentDoc` (`spreadsheets.currentonly`) so `status = approved` rows appear live on the map (`doGet`). When rows are `pending` or `needs_geocoding`, GitHub Actions opens an `@juniormonkey` GitHub Issue to trigger email alerts.
 3. **GitHub Pages (`docs/`)** serves the responsive Leaflet map + native `<dialog>` photo/video lightbox for Wix embedding.
 
 ## Sheet Status Values

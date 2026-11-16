@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: write
+  issues: write
 
 concurrency:
   group: discord-sync
@@ -35,6 +36,7 @@ jobs:
           GSHEET_WEBHOOK_URL: ${{ secrets.GSHEET_WEBHOOK_URL }}
           GSHEET_WEBHOOK_SECRET: ${{ secrets.GSHEET_WEBHOOK_SECRET }}
           DISCORD_CHANNEL_ID: '1493308738755625060'
+          ALERT_JSON_PATH: /tmp/maggie_alert.json
         run: python scripts/sync_discord.py
 
       - name: Commit updated photos and static cache
@@ -49,3 +51,10 @@ jobs:
           else
             echo "No changes to commit."
           fi
+
+      - name: Open GitHub Issue alert when attention is needed
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GITHUB_REPOSITORY: ${{ github.repository }}
+          ALERT_JSON_PATH: /tmp/maggie_alert.json
+        run: python scripts/post_github_alert.py

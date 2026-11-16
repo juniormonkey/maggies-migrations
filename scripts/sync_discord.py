@@ -19,6 +19,7 @@ from PIL import Image, ImageOps
 DISCORD_API = "https://discord.com/api/v10"
 GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 NOMINATIM_API = "https://nominatim.openstreetmap.org/search"
+DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1YTSOYbDWXKjLt-E23Pk3qkp0fNwdZ6p4XqMXz9SeNqk/edit"
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic")
 YOUTUBE_RE = re.compile(
     r"https?://(?:www\.|m\.)?(?:youtube\.com/(?:watch\?v=|shorts/|embed/)|youtu\.be/)([A-Za-z0-9_-]{6,})[^\s]*"
@@ -312,6 +313,69 @@ def build_discord_jump_url(guild_id: str | None, channel_id: str, message_id: st
     return f"https://discord.com/channels/{guild_segment}/{channel_id}/{message_id}"
 
 
+def build_alert_issue_payload(
+    new_rows: list[dict[str, Any]],
+    geocoded_updates: list[dict[str, Any]],
+    sheet_url: str,
+    notify_user: str = "juniormonkey",
+) -> dict[str, Any] | None:
+    """Build a GitHub Issue notification payload when new/updated rows need attention."""
+    combined = list(new_rows) + list(geocoded_updates)
+    if not combined:
+        return None
+
+    needs_geocoding_count = sum(1 for r in combined if r.get("status") == "needs_geocoding")
+    pending_count = sum(1 for r in combined if r.get("status") == "pending")
+
+    summary_parts: list[str] = []
+    if needs_geocoding_count > 0:
+        noun = "needs geocoding" if needs_geocoding_count == 1 else "need geocoding"
+        summary_parts.append(f"{needs_geocoding_count} {noun}")
+    if pending_count > 0:
+        summary_parts.append(f"{pending_count} awaiting approval")
+    if not summary_parts:
+        summary_parts.append(f"{len(combined)} updated")
+
+    title = f"[Maggie's Migrations] {', '.join(summary_parts)}"
+
+    lines = [
+        f"@{notify_user} New Maggie sightings require review in the [Maggie's Migrations Google Sheet]({sheet_url}).",
+        "",
+        "- Change `status` from `pending` to `approved` to publish to the map.",
+        "- For `needs_geocoding` rows, fill in `location_query` (or `lat`/`lng`) and set `status` to `approved` (or leave `needs_geocoding`/`pending` to auto-geocode on next run).",
+        "",
+    ]
+    for item in combined:
+        status = item.get("status")
+        badge = "NEEDS GEOCODING" if status == "needs_geocoding" else "PENDING APPROVAL"
+        label = item.get("place_name") or item.get("location_query") or "(unknown location)"
+        author = item.get("author") or "Unknown"
+        posted_at = item.get("posted_at") or ""
+        discord_url = str(item.get("discord_url") or "").strip()
+        caption = str(item.get("caption") or "").strip()
+        media = [u for u in str(item.get("media_urls") or "").split() if u]
+        first_image = next((u for u in media if "youtube.com" not in u and "youtu.be" not in u), "")
+
+        meta_parts = [f"Author: {author}"]
+        if posted_at:
+            meta_parts.append(f"Date: {posted_at}")
+        if discord_url:
+            meta_parts.append(f"[Discord message]({discord_url})")
+
+        lines.append(f"- **[{badge}] {label}** (`{item.get('id', '')}`)")
+        lines.append(f"  {' · '.join(meta_parts)}")
+        if caption:
+            lines.append(f"  > {caption}")
+        if first_image:
+            lines.append(f'  <br><img src="{first_image}" width="240" alt="{label}">')
+
+    return {
+        "title": title,
+        "body": "\n".join(lines),
+        "assignees": [notify_user],
+    }
+
+
 def write_static_cache(pins: list[dict[str, Any]], data_dir: Path) -> None:
     """Write approved pins snapshot to docs/data/pins.json and docs/data/pins.csv."""
     data_dir.mkdir(parents=True, exist_ok=True)
@@ -403,6 +467,11 @@ def run_sync(repo_root: Path) -> None:
                     "status": "pending",
                     "lat": lat,
                     "lng": lng,
+                    "author": item.get("author", ""),
+                    "posted_at": item.get("posted_at", ""),
+                    "caption": item.get("caption", ""),
+                    "media_urls": item.get("media_urls", ""),
+                    "discord_url": item.get("discord_url", ""),
                     "notes": "Geocoded from updated location_query — change status to approved to publish",
                 }
             )
@@ -504,6 +573,14 @@ def run_sync(repo_root: Path) -> None:
 
     approved_pins = batch_result.get("approved_pins", [])
     write_static_cache(approved_pins, data_dir)
+
+    alert_out = os.environ.get("ALERT_JSON_PATH", "").strip()
+    if alert_out:
+        sheet_url = str(batch_result.get("sheet_url") or DEFAULT_SHEET_URL)
+        alert_payload = build_alert_issue_payload(new_rows, geocoded_updates, sheet_url)
+        if alert_payload is not None:
+            Path(alert_out).write_text(json.dumps(alert_payload, indent=2), encoding="utf-8")
+
     print(
         f"Sync complete: {len(new_rows)} new rows, {len(geocoded_updates)} geocoded retries, "
         f"{len(approved_pins)} total approved pins."

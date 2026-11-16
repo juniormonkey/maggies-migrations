@@ -148,6 +148,51 @@ class TestSyncDiscord(unittest.TestCase):
             self.assertEqual(rows[0]["status"], "approved")
             self.assertEqual(rows[0]["media_urls"], "https://example.com/test.jpg")
 
+    def test_code_gs_only_current_doc_and_no_mail_scopes(self) -> None:
+        code_path = Path(__file__).resolve().parent.parent / "apps_script" / "Code.gs"
+        source = code_path.read_text(encoding="utf-8")
+        self.assertTrue(source.lstrip().startswith("/**\n * @OnlyCurrentDoc\n */"))
+        for forbidden in ("MailApp", "GmailApp", "Session", "DriveApp", "UrlFetchApp", "openById"):
+            self.assertNotIn(forbidden, source)
+
+    def test_build_alert_issue_payload(self) -> None:
+        sheet_url = "https://docs.google.com/spreadsheets/d/test/edit"
+        self.assertIsNone(sync_discord.build_alert_issue_payload([], [], sheet_url))
+
+        new_rows = [
+            {
+                "id": "discord-10",
+                "status": "needs_geocoding",
+                "place_name": "",
+                "location_query": "",
+                "caption": "Mystery fountain",
+                "author": "Alice",
+                "posted_at": "2026-11-16",
+                "media_urls": "https://juniormonkey.github.io/maggies-migrations/photos/discord-10-1.jpg",
+                "discord_url": "https://discord.com/channels/1/2/10",
+            },
+            {
+                "id": "discord-11",
+                "status": "pending",
+                "place_name": "Eiffel Tower",
+                "location_query": "Eiffel Tower, Paris",
+                "caption": "Maggie in Paris",
+                "author": "Bob",
+                "posted_at": "2026-11-16",
+                "media_urls": "https://juniormonkey.github.io/maggies-migrations/photos/discord-11-1.jpg",
+                "discord_url": "https://discord.com/channels/1/2/11",
+            },
+        ]
+        alert = sync_discord.build_alert_issue_payload(new_rows, [], sheet_url)
+        self.assertIsNotNone(alert)
+        assert alert is not None
+        self.assertEqual(alert["title"], "[Maggie's Migrations] 1 needs geocoding, 1 awaiting approval")
+        self.assertEqual(alert["assignees"], ["juniormonkey"])
+        self.assertIn("@juniormonkey", alert["body"])
+        self.assertIn(sheet_url, alert["body"])
+        self.assertIn("https://discord.com/channels/1/2/10", alert["body"])
+        self.assertIn("https://juniormonkey.github.io/maggies-migrations/photos/discord-10-1.jpg", alert["body"])
+
 
 if __name__ == "__main__":
     unittest.main()
