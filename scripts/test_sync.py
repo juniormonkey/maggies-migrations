@@ -117,7 +117,11 @@ class TestSyncDiscord(unittest.TestCase):
                 resp = mock.MagicMock()
                 resp.content = png_bytes
                 mock_get.return_value = resp
-                sync_discord.download_and_resize_image("https://cdn.example.com/a.png", dest, max_dim=1600)
+                jpeg_bytes, exif_gps = sync_discord.download_and_resize_image(
+                    "https://cdn.example.com/a.png", dest, max_dim=1600
+                )
+            self.assertGreater(len(jpeg_bytes), 0)
+            self.assertIsNone(exif_gps)
 
             with Image.open(dest) as out_img:
                 self.assertEqual(out_img.format, "JPEG")
@@ -262,6 +266,106 @@ class TestSyncDiscord(unittest.TestCase):
         self.assertEqual(mock_post.call_args.args[0], sync_discord.GEMINI_API)
         self.assertEqual(kwargs["headers"]["x-goog-api-key"], "secret-key")
         self.assertEqual(kwargs["json"]["generationConfig"]["thinkingConfig"], {"thinkingBudget": 512})
+
+    def test_extract_exif_gps_dms_and_null_island(self) -> None:
+        img = Image.new("RGB", (64, 64), (10, 20, 30))
+        exif = img.getexif()
+        exif[0x8825] = {
+            1: "N",
+            2: (37.0, 47.0, 49.92),
+            3: "W",
+            4: (122.0, 25.0, 9.12),
+        }
+        buf = io.BytesIO()
+        img.save(buf, format="JPEG", exif=exif.tobytes())
+        jpg_with_gps = buf.getvalue()
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            dest = Path(tmpdir) / "gps.jpg"
+            with mock.patch("sync_discord.requests.get") as mock_get:
+                resp = mock.MagicMock()
+                resp.content = jpg_with_gps
+                mock_get.return_value = resp
+                _, gps = sync_discord.download_and_resize_image("https://cdn.example.com/gps.jpg", dest)
+
+            self.assertIsNotNone(gps)
+            assert gps is not None
+            self.assertAlmostEqual(gps[0], 37.7972, places=4)
+            self.assertAlmostEqual(gps[1], -122.4192, places=4)
+
+            with Image.open(dest) as saved:
+                self.assertIsNone(sync_discord.extract_exif_gps(saved))
+
+        null_img = Image.new("RGB", (32, 32), (0, 0, 0))
+        null_exif = null_img.getexif()
+        null_exif[0x8825] = {1: "N", 2: (0.0, 0.0, 0.0), 3: "E", 4: (0.0, 0.0, 0.0)}
+        null_buf = io.BytesIO()
+        null_img.save(null_buf, format="JPEG", exif=null_exif.tobytes())
+        with Image.open(io.BytesIO(null_buf.getvalue())) as reopened_null:
+            self.assertIsNone(sync_discord.extract_exif_gps(reopened_null))
+
+    def test_geocode_with_fallbacks_handles_unindexed_poi(self) -> None:
+        geocoder = sync_discord.NominatimLimiter(min_interval=0.0)
+        with mock.patch.object(
+            geocoder,
+            "geocode",
+            side_effect=[
+                (None, None),
+                (-37.8142454, 144.9631732),
+            ],
+        ) as mock_geo:
+            lat, lng, matched = sync_discord.geocode_with_fallbacks(
+                geocoder, "Koori Heritage Trust, Melbourne, Australia"
+            )
+        self.assertAlmostEqual(lat, -37.8142454)
+        self.assertAlmostEqual(lng, 144.9631732)
+        self.assertEqual(matched, "Melbourne, Australia")
+        self.assertEqual(mock_geo.call_count, 2)
+
+    def test_vision_multi_photo_1280px_and_context(self) -> None:
+        buf = io.BytesIO()
+        Image.new("RGB", (2400, 1600), (80, 90, 100)).save(buf, format="JPEG")
+        b64_img = sync_discord.resize_for_vision(buf.getvalue())
+        with Image.open(io.BytesIO(sync_discord.base64.b64decode(b64_img))) as resized:
+            self.assertEqual(resized.size, (1280, 853))
+
+        fake_resp = {
+            "candidates": [
+                {
+                    "content": {
+                        "parts": [
+                            {
+                                "text": json.dumps(
+                                    {
+                                        "place_name": "Ocean Beach, San Francisco",
+                                        "location_query": "Ocean Beach, San Francisco, CA",
+                                        "fallback_queries": ["San Francisco, CA"],
+                                        "visual_evidence": "Muni bus sign visible in background",
+                                    }
+                                )
+                            }
+                        ]
+                    }
+                }
+            ]
+        }
+        with mock.patch("sync_discord._gemini_post", return_value=fake_resp) as mock_post:
+            res = sync_discord.infer_location_from_photos_and_context(
+                [b64_img, b64_img, b64_img],
+                "secret-key",
+                caption="Maggie at Ocean Beach",
+                tentative_query="Ocean Beach",
+                author_context=["2026-10-16: Cable Car Museum, San Francisco"],
+                exif_gps=(37.7594, -122.5107),
+            )
+
+        self.assertEqual(res["location_query"], "Ocean Beach, San Francisco, CA")
+        self.assertEqual(res["visual_evidence"], "Muni bus sign visible in background")
+        self.assertEqual(res["fallback_queries"], ["San Francisco, CA"])
+        parts = mock_post.call_args.args[0]["contents"][0]["parts"]
+        self.assertEqual(len(parts), 4)
+        self.assertIn("Cable Car Museum, San Francisco", parts[0]["text"])
+        self.assertIn("37.75940, -122.51070", parts[0]["text"])
 
 
 if __name__ == "__main__":

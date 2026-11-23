@@ -7,6 +7,7 @@ import csv
 import datetime as dt
 import io
 import json
+import math
 import os
 import re
 import time
@@ -19,6 +20,7 @@ from PIL import Image, ImageOps
 DISCORD_API = "https://discord.com/api/v10"
 GEMINI_API = "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent"
 NOMINATIM_API = "https://nominatim.openstreetmap.org/search"
+NOMINATIM_REVERSE_API = "https://nominatim.openstreetmap.org/reverse"
 DEFAULT_SHEET_URL = "https://docs.google.com/spreadsheets/d/1YTSOYbDWXKjLt-E23Pk3qkp0fNwdZ6p4XqMXz9SeNqk/edit"
 IMAGE_EXTENSIONS = (".jpg", ".jpeg", ".png", ".webp", ".gif", ".heic")
 YOUTUBE_RE = re.compile(
@@ -138,11 +140,61 @@ def split_tail_holdback(
     return process, new_cursor
 
 
-def download_and_resize_image(url: str, dest_path: Path, max_dim: int = 1600) -> bytes:
-    """Download image URL, normalize EXIF orientation, resize, and write JPEG."""
+def _rational_to_float(val: Any) -> float:
+    """Convert an EXIF rational, (num, den) tuple, or numeric scalar to float."""
+    if isinstance(val, tuple) and len(val) == 2:
+        num, den = val
+        if float(den) == 0.0:
+            raise ValueError("Zero denominator in EXIF rational")
+        return float(num) / float(den)
+    return float(val)
+
+
+def _dms_to_decimal(dms: Any, ref: str) -> float | None:
+    """Convert EXIF degrees/minutes/seconds triplet + hemisphere ref to signed decimal degrees."""
+    if not dms or len(dms) != 3:
+        return None
+    deg = _rational_to_float(dms[0])
+    minutes = _rational_to_float(dms[1])
+    seconds = _rational_to_float(dms[2])
+    decimal = abs(deg) + (minutes / 60.0) + (seconds / 3600.0)
+    if not math.isfinite(decimal):
+        return None
+    if str(ref or "").strip().upper() in ("S", "W"):
+        decimal = -decimal
+    return decimal
+
+
+def extract_exif_gps(img: Image.Image) -> tuple[float, float] | None:
+    """Extract decimal (lat, lng) from an image's EXIF GPS IFD before stripping/resizing."""
+    try:
+        exif = img.getexif()
+        gps_ifd = exif.get_ifd(0x8825) if exif else {}
+        if not gps_ifd:
+            return None
+        lat = _dms_to_decimal(gps_ifd.get(2), str(gps_ifd.get(1) or "N"))
+        lng = _dms_to_decimal(gps_ifd.get(4), str(gps_ifd.get(3) or "E"))
+        if lat is None or lng is None:
+            return None
+        if not (-90.0 <= lat <= 90.0 and -180.0 <= lng <= 180.0):
+            return None
+        if abs(lat) < 1e-5 and abs(lng) < 1e-5:
+            return None
+        return round(lat, 7), round(lng, 7)
+    except Exception:
+        return None
+
+
+def download_and_resize_image(
+    url: str,
+    dest_path: Path,
+    max_dim: int = 1600,
+) -> tuple[bytes, tuple[float, float] | None]:
+    """Download image URL, read EXIF GPS before normalization, resize, and write JPEG."""
     resp = requests.get(url, timeout=30)
     resp.raise_for_status()
     with Image.open(io.BytesIO(resp.content)) as img:
+        exif_gps = extract_exif_gps(img)
         img = ImageOps.exif_transpose(img)
         if img.mode != "RGB":
             img = img.convert("RGB")
@@ -152,15 +204,15 @@ def download_and_resize_image(url: str, dest_path: Path, max_dim: int = 1600) ->
         img.save(buf, format="JPEG", quality=82, optimize=True)
         jpeg_bytes = buf.getvalue()
     dest_path.write_bytes(jpeg_bytes)
-    return jpeg_bytes
+    return jpeg_bytes, exif_gps
 
 
-def resize_for_vision(jpeg_bytes: bytes, max_dim: int = 512) -> str:
-    """Create a small base64 JPEG thumbnail for optional Gemini visual landmark fallback."""
+def resize_for_vision(jpeg_bytes: bytes, max_dim: int = 1280) -> str:
+    """Create a base64 JPEG at up to 1280px so signs and small placard text remain legible."""
     with Image.open(io.BytesIO(jpeg_bytes)) as img:
         img.thumbnail((max_dim, max_dim), Image.Resampling.LANCZOS)
         buf = io.BytesIO()
-        img.save(buf, format="JPEG", quality=72)
+        img.save(buf, format="JPEG", quality=80)
         return base64.b64encode(buf.getvalue()).decode("ascii")
 
 
@@ -230,15 +282,23 @@ def call_gemini_group_sightings(messages: list[dict[str, Any]], api_key: str) ->
         "OR in an immediately following message or reply.\n"
         "2. Merge consecutive messages by the same author (close in time) or reply threads that describe the same "
         "photo/video post into ONE sighting object.\n"
-        "3. Ignore pure off-topic chatter that has image_count=0, has_youtube=false, and doesn't explain an adjacent photo.\n"
-        "4. Every message with image_count > 0 or has_youtube=true MUST either be the primary_message_id of a sighting "
+        "3. Use surrounding messages in the batch by the same author as trip context when a post omits the city/state "
+        '(e.g., "The OG Heinz factory!" right after a Pittsburgh post).\n'
+        "4. Ignore pure off-topic chatter that has image_count=0, has_youtube=false, and doesn't explain an adjacent photo.\n"
+        "5. Every message with image_count > 0 or has_youtube=true MUST either be the primary_message_id of a sighting "
         "or included inside grouped_message_ids of an adjacent sighting.\n"
-        "5. Return ONLY a JSON array of objects with keys:\n"
+        "6. Never join two separate venues with 'and' in location_query; put a single geocodable venue + city/country "
+        'and expand colloquial names (e.g. "Great Salt Flats" -> "Bonneville Salt Flats, Utah, USA").\n'
+        "7. Return ONLY a JSON array of objects with keys:\n"
         '   - "primary_message_id": string (first/photo message id in the group)\n'
         '   - "grouped_message_ids": array of all message ids belonging to this sighting\n'
         '   - "is_sighting": boolean\n'
         '   - "place_name": concise clean display title (e.g. "Eiffel Tower, Paris" or "" if unknown)\n'
-        '   - "location_query": geocodable place/address string for OpenStreetMap Nominatim (or "" if location cannot be determined)\n'
+        '   - "location_query": geocodable place/address string for OpenStreetMap Nominatim (or "" if unknown)\n'
+        '   - "fallback_queries": array of 1-3 progressively broader Nominatim queries '
+        '(e.g. ["Southbank, Melbourne, Australia", "Melbourne, Australia"])\n'
+        '   - "needs_visual_check": boolean (true if location_query is empty or ambiguous/missing city-country '
+        'such as "Ocean Beach" or "Dark Horse")\n'
         '   - "caption": cleaned human story/notes combining relevant text from grouped messages (without bare URLs)\n\n'
         f"Messages JSON:\n{json.dumps(compact, ensure_ascii=False)}"
     )
@@ -265,23 +325,48 @@ def call_gemini_group_sightings(messages: list[dict[str, Any]], api_key: str) ->
     return [item for item in parsed if item.get("is_sighting", True)]
 
 
-def infer_location_from_photo(jpeg_b64: str, api_key: str) -> tuple[str, str]:
-    """Use Gemini Vision only when text lacked a location, returning (place_name, location_query) or ('', '')."""
+def infer_location_from_photos_and_context(
+    jpeg_b64_list: list[str],
+    api_key: str,
+    caption: str = "",
+    tentative_query: str = "",
+    author_context: list[str] | None = None,
+    exif_gps: tuple[float, float] | None = None,
+) -> dict[str, Any]:
+    """Inspect up to 4 1280px photos + OCR/trip context to infer or disambiguate a location."""
+    if not jpeg_b64_list:
+        return {"place_name": "", "location_query": "", "fallback_queries": [], "visual_evidence": ""}
+
+    context_block = {
+        "caption": caption,
+        "tentative_query": tentative_query,
+        "recent_posts_by_same_author": author_context or [],
+        "exif_gps_hint": f"{exif_gps[0]:.5f}, {exif_gps[1]:.5f}" if exif_gps else "",
+    }
     prompt = (
-        "This photo shows a mascot toy magpie traveling somewhere. ONLY if there is an unmistakable landmark, "
-        "street sign, museum sign, airport code, or recognizable monument that uniquely identifies the city/place, "
-        'return {"place_name": "...", "location_query": "..."}. If uncertain, return {"place_name": "", "location_query": ""}.'
+        "These photos show a community mascot toy magpie ('Maggie') traveling somewhere.\n"
+        "Tasks:\n"
+        "1. Carefully read ALL visible text across every image (signs, museum placards, menus, bottle labels, "
+        "street names, badges, storefronts, transit maps) and inspect landmarks or recognizable scenery.\n"
+        "2. If tentative_query is empty OR ambiguous (like 'Ocean Beach' or 'Dark Horse'), use visible clues, "
+        "signage, and recent_posts_by_same_author to identify or disambiguate the exact city/venue. If tentative_query "
+        "is just a non-geographic event/joke title and no real place is identifiable, return empty strings.\n"
+        "3. Never guess from generic indoor rooms, food, or trees. Only return a place if backed by clear visual/text clues "
+        "or strong author trip continuity.\n"
+        "4. Return ONLY a JSON object with keys:\n"
+        '   - "place_name": concise clean display title (or "")\n'
+        '   - "location_query": specific OpenStreetMap Nominatim query including city/region/country (or "")\n'
+        '   - "fallback_queries": array of 1-3 broader Nominatim queries (e.g. ["Neighborhood, City", "City, Country"])\n'
+        '   - "visual_evidence": short 1-phrase note of what sign/text/landmark/context identified the place (or "")\n\n'
+        f"Context:\n{json.dumps(context_block, ensure_ascii=False)}"
     )
+    parts: list[dict[str, Any]] = [{"text": prompt}]
+    for b64 in jpeg_b64_list[:4]:
+        parts.append({"inline_data": {"mime_type": "image/jpeg", "data": b64}})
+
     resp_json = _gemini_post(
         {
-            "contents": [
-                {
-                    "parts": [
-                        {"text": prompt},
-                        {"inline_data": {"mime_type": "image/jpeg", "data": jpeg_b64}},
-                    ]
-                }
-            ],
+            "contents": [{"parts": parts}],
             "generationConfig": {
                 "responseMimeType": "application/json",
                 "temperature": 0.1,
@@ -293,8 +378,14 @@ def infer_location_from_photo(jpeg_b64: str, api_key: str) -> tuple[str, str]:
     )
     data = _parse_gemini_json(resp_json)
     if not isinstance(data, dict):
-        return "", ""
-    return str(data.get("place_name") or "").strip(), str(data.get("location_query") or "").strip()
+        return {"place_name": "", "location_query": "", "fallback_queries": [], "visual_evidence": ""}
+    fallbacks = data.get("fallback_queries")
+    return {
+        "place_name": str(data.get("place_name") or "").strip(),
+        "location_query": str(data.get("location_query") or "").strip(),
+        "fallback_queries": [str(q).strip() for q in fallbacks if str(q).strip()] if isinstance(fallbacks, list) else [],
+        "visual_evidence": str(data.get("visual_evidence") or "").strip(),
+    }
 
 
 def ensure_all_media_posts_captured(
@@ -334,15 +425,17 @@ class NominatimLimiter:
         self.min_interval = min_interval
         self._last_call = 0.0
 
-    def geocode(self, query: str) -> tuple[float | None, float | None]:
-        clean = query.strip()
-        if not clean:
-            return None, None
+    def _wait_for_slot(self) -> None:
         elapsed = time.monotonic() - self._last_call
         if elapsed < self.min_interval:
             time.sleep(self.min_interval - elapsed)
         self._last_call = time.monotonic()
 
+    def geocode(self, query: str) -> tuple[float | None, float | None]:
+        clean = query.strip()
+        if not clean:
+            return None, None
+        self._wait_for_slot()
         resp = requests.get(
             NOMINATIM_API,
             params={"q": clean, "format": "jsonv2", "limit": 1},
@@ -354,6 +447,74 @@ class NominatimLimiter:
         if not hits:
             return None, None
         return round(float(hits[0]["lat"]), 7), round(float(hits[0]["lon"]), 7)
+
+    def reverse_geocode(self, lat: float, lng: float) -> str:
+        """Resolve decimal coordinates into a concise human-readable place label."""
+        fallback_label = f"{lat:.5f}, {lng:.5f}"
+        try:
+            self._wait_for_slot()
+            resp = requests.get(
+                NOMINATIM_REVERSE_API,
+                params={"lat": lat, "lon": lng, "format": "jsonv2", "zoom": 14},
+                headers={"User-Agent": USER_AGENT},
+                timeout=20,
+            )
+            resp.raise_for_status()
+            data = resp.json()
+            addr = data.get("address") or {}
+            name = str(data.get("name") or "").strip()
+            if not name and data.get("display_name"):
+                name = str(data["display_name"]).split(",")[0].strip()
+            city = str(
+                addr.get("city")
+                or addr.get("town")
+                or addr.get("village")
+                or addr.get("state")
+                or ""
+            ).strip()
+            country = str(addr.get("country") or "").strip()
+            parts: list[str] = []
+            for seg in (name, city, country):
+                if seg and seg.lower() not in {p.lower() for p in parts}:
+                    parts.append(seg)
+            return ", ".join(parts) if parts else fallback_label
+        except Exception:
+            return fallback_label
+
+
+def build_query_candidates(primary_query: str, fallback_queries: list[str] | None = None) -> list[str]:
+    """Build ordered, deduplicated Nominatim candidates including progressive comma-tail fallbacks."""
+    seeds = [str(q).strip() for q in [primary_query, *(fallback_queries or [])] if str(q).strip()]
+    candidates: list[str] = []
+    seen: set[str] = set()
+
+    def _add(q: str) -> None:
+        key = q.lower()
+        if q and key not in seen:
+            seen.add(key)
+            candidates.append(q)
+
+    for seed in seeds:
+        _add(seed)
+    for seed in seeds:
+        parts = [p.strip() for p in seed.split(",") if p.strip()]
+        if len(parts) >= 3:
+            for start_idx in range(1, len(parts) - 1):
+                _add(", ".join(parts[start_idx:]))
+    return candidates
+
+
+def geocode_with_fallbacks(
+    geocoder: NominatimLimiter,
+    primary_query: str,
+    fallback_queries: list[str] | None = None,
+) -> tuple[float | None, float | None, str]:
+    """Try primary and fallback Nominatim queries in order, returning (lat, lng, matched_query)."""
+    for candidate in build_query_candidates(primary_query, fallback_queries):
+        lat, lng = geocoder.geocode(candidate)
+        if lat is not None and lng is not None:
+            return lat, lng, candidate
+    return None, None, ""
 
 
 def build_discord_jump_url(guild_id: str | None, channel_id: str, message_id: str) -> str:
@@ -530,6 +691,57 @@ def process_messages_in_chunks(
     return all_sightings
 
 
+def _build_author_context(
+    author: str,
+    posted_at: str,
+    approved_pins: list[dict[str, Any]],
+    session_sightings: list[tuple[str, str, str]],
+) -> list[str]:
+    """Collect up to 5 recent sightings by the same author within ±7 days for trip continuity."""
+    try:
+        target_date = dt.date.fromisoformat(posted_at)
+    except ValueError:
+        return []
+    author_key = author.strip().lower()
+    if not author_key:
+        return []
+
+    records: list[tuple[dt.date, str]] = []
+    for p in approved_pins:
+        p_author = str(p.get("author") or "").strip().lower()
+        p_date_str = str(p.get("posted_at") or "").strip()
+        p_place = str(p.get("place_name") or "").strip()
+        if p_author == author_key and p_date_str and p_place:
+            try:
+                records.append((dt.date.fromisoformat(p_date_str), p_place))
+            except ValueError:
+                continue
+
+    for s_author, s_date_str, s_place in session_sightings:
+        if s_author.strip().lower() == author_key and s_date_str and s_place:
+            try:
+                records.append((dt.date.fromisoformat(s_date_str), s_place))
+            except ValueError:
+                continue
+
+    nearby = [
+        (abs((d - target_date).days), d, f"{d.isoformat()}: {place}")
+        for d, place in records
+        if abs((d - target_date).days) <= 7
+    ]
+    nearby.sort(key=lambda item: (item[0], item[1]))
+
+    result: list[str] = []
+    seen: set[str] = set()
+    for _, _, entry in nearby:
+        if entry not in seen:
+            seen.add(entry)
+            result.append(entry)
+            if len(result) >= 5:
+                break
+    return result
+
+
 def run_sync(repo_root: Path) -> None:
     """Execute one full incremental Discord -> Google Sheet -> static cache sync."""
     discord_token = os.environ["DISCORD_BOT_TOKEN"]
@@ -547,12 +759,20 @@ def run_sync(repo_root: Path) -> None:
     existing_ids = set(state.get("existing_ids", []))
     last_message_id = str(state.get("last_message_id") or "")
     retry_geocoding = list(state.get("retry_geocoding", []))
+    approved_pins_state = list(state.get("approved_pins", []))
 
     geocoder = NominatimLimiter()
     geocoded_updates: list[dict[str, Any]] = []
     for item in retry_geocoding:
-        lat, lng = geocoder.geocode(str(item.get("location_query") or ""))
+        query = str(item.get("location_query") or "")
+        lat, lng, matched_query = geocode_with_fallbacks(geocoder, query)
         if lat is not None and lng is not None:
+            note = "Geocoded from updated location_query — change status to approved to publish"
+            if matched_query.lower() != query.strip().lower():
+                note = (
+                    f"Geocoded via fallback '{matched_query}' from updated location_query "
+                    "— change status to approved to publish"
+                )
             geocoded_updates.append(
                 {
                     "id": item["id"],
@@ -565,7 +785,7 @@ def run_sync(repo_root: Path) -> None:
                     "caption": item.get("caption", ""),
                     "media_urls": item.get("media_urls", ""),
                     "discord_url": item.get("discord_url", ""),
-                    "notes": "Geocoded from updated location_query — change status to approved to publish",
+                    "notes": note,
                 }
             )
 
@@ -582,6 +802,7 @@ def run_sync(repo_root: Path) -> None:
     print(f"Identified {len(sightings)} sighting candidate(s).", flush=True)
 
     new_rows: list[dict[str, Any]] = []
+    session_sightings: list[tuple[str, str, str]] = []
     for s in sightings:
         grouped_ids = [str(gid) for gid in s.get("grouped_message_ids", []) if str(gid) in msg_by_id]
         primary_id = str(s.get("primary_message_id") or (grouped_ids[0] if grouped_ids else ""))
@@ -596,7 +817,8 @@ def run_sync(repo_root: Path) -> None:
 
         primary_msg = msg_by_id[primary_id]
         media_urls: list[str] = []
-        first_jpeg_bytes: bytes | None = None
+        photo_bytes_list: list[bytes] = []
+        exif_gps: tuple[float, float] | None = None
 
         for gid in grouped_ids:
             m = msg_by_id[gid]
@@ -606,9 +828,11 @@ def run_sync(repo_root: Path) -> None:
                     continue
                 img_idx += 1
                 filename = f"discord-{gid}-{img_idx}.jpg"
-                jpeg_bytes = download_and_resize_image(att["url"], photos_dir / filename)
-                if first_jpeg_bytes is None:
-                    first_jpeg_bytes = jpeg_bytes
+                jpeg_bytes, img_gps = download_and_resize_image(att["url"], photos_dir / filename)
+                if len(photo_bytes_list) < 4:
+                    photo_bytes_list.append(jpeg_bytes)
+                if exif_gps is None and img_gps is not None:
+                    exif_gps = img_gps
                 media_urls.append(f"{public_base_url}/photos/{filename}")
             for yt_url in extract_youtube_urls(m.get("content", "")):
                 if yt_url not in media_urls:
@@ -617,34 +841,87 @@ def run_sync(repo_root: Path) -> None:
         if not media_urls:
             continue
 
-        place_name = str(s.get("place_name") or "").strip()
-        location_query = str(s.get("location_query") or "").strip()
-
-        if not location_query and first_jpeg_bytes is not None:
-            try:
-                vis_place, vis_query = infer_location_from_photo(resize_for_vision(first_jpeg_bytes), gemini_key)
-                if vis_query:
-                    place_name = place_name or vis_place
-                    location_query = vis_query
-            except Exception as exc:
-                print(f"Vision fallback skipped for {pin_id}: {exc}", flush=True)
-
-        if location_query:
-            print(f"Geocoding {pin_id}: {location_query}", flush=True)
-        lat, lng = geocoder.geocode(location_query) if location_query else (None, None)
-        if lat is not None and lng is not None:
-            status = "pending"
-            notes = "Auto-geocoded; change status to approved to publish"
-        else:
-            status = "needs_geocoding"
-            notes = "Could not geocode — enter location_query or lat/lng, or set status=ignored"
-
         ts_dt = dt.datetime.fromisoformat(primary_msg["timestamp"])
+        posted_at = ts_dt.strftime("%Y-%m-%d")
         author = (
             primary_msg.get("author", {}).get("global_name")
             or primary_msg.get("author", {}).get("username")
             or "Discord Member"
         )
+        caption = str(s.get("caption") or "").strip()
+
+        place_name = str(s.get("place_name") or "").strip()
+        location_query = str(s.get("location_query") or "").strip()
+        fallback_queries = [
+            str(q).strip() for q in (s.get("fallback_queries") or []) if str(q).strip()
+        ]
+        visual_evidence = ""
+
+        is_ambiguous = bool(s.get("needs_visual_check")) or (bool(location_query) and "," not in location_query)
+        lat: float | None = None
+        lng: float | None = None
+        matched_query = ""
+        primary_query = location_query
+
+        if location_query and not is_ambiguous:
+            print(f"Geocoding {pin_id}: {location_query}", flush=True)
+            lat, lng, matched_query = geocode_with_fallbacks(geocoder, location_query, fallback_queries)
+
+        if (lat is None or lng is None or is_ambiguous) and photo_bytes_list:
+            author_context = _build_author_context(author, posted_at, approved_pins_state, session_sightings)
+            try:
+                vis = infer_location_from_photos_and_context(
+                    [resize_for_vision(b) for b in photo_bytes_list[:4]],
+                    gemini_key,
+                    caption=caption,
+                    tentative_query=location_query,
+                    author_context=author_context,
+                    exif_gps=exif_gps,
+                )
+                visual_evidence = str(vis.get("visual_evidence") or "").strip()
+                if vis.get("location_query"):
+                    location_query = str(vis["location_query"]).strip()
+                    primary_query = location_query
+                    if vis.get("place_name"):
+                        place_name = str(vis["place_name"]).strip()
+                    elif not place_name:
+                        place_name = location_query
+                    vis_fallbacks = [str(q).strip() for q in (vis.get("fallback_queries") or []) if str(q).strip()]
+                    fallback_queries = vis_fallbacks + [q for q in fallback_queries if q not in vis_fallbacks]
+                    lat = None
+                    lng = None
+            except Exception as exc:
+                print(f"Vision fallback skipped for {pin_id}: {exc}", flush=True)
+
+        if (lat is None or lng is None) and location_query:
+            print(f"Geocoding {pin_id}: {location_query}", flush=True)
+            lat, lng, matched_query = geocode_with_fallbacks(geocoder, location_query, fallback_queries)
+
+        if lat is not None and lng is not None:
+            status = "pending"
+            note_parts = ["Auto-geocoded"]
+            if primary_query and matched_query.lower() != primary_query.lower():
+                note_parts[0] += f" via fallback '{matched_query}'"
+            if visual_evidence:
+                note_parts.append(f"[vision: {visual_evidence}]")
+            if exif_gps:
+                if max(abs(lat - exif_gps[0]), abs(lng - exif_gps[1])) > 0.25:
+                    note_parts.append(f"[WARNING: EXIF GPS differs ({exif_gps[0]:.5f}, {exif_gps[1]:.5f})]")
+                else:
+                    note_parts.append("[matches EXIF GPS]")
+            notes = " ".join(note_parts) + "; change status to approved to publish"
+            session_sightings.append((author, posted_at, place_name or location_query))
+        elif exif_gps is not None:
+            lat, lng = exif_gps
+            if not place_name:
+                place_name = geocoder.reverse_geocode(lat, lng)
+            status = "pending"
+            notes = f"From photo EXIF GPS ({lat:.5f}, {lng:.5f}) — verify location before approving"
+            session_sightings.append((author, posted_at, place_name))
+        else:
+            status = "needs_geocoding"
+            notes = "Could not geocode — enter location_query or lat/lng, or set status=ignored"
+
         new_rows.append(
             {
                 "id": pin_id,
@@ -653,9 +930,9 @@ def run_sync(repo_root: Path) -> None:
                 "location_query": location_query,
                 "lat": lat if lat is not None else "",
                 "lng": lng if lng is not None else "",
-                "caption": str(s.get("caption") or "").strip(),
+                "caption": caption,
                 "author": author,
-                "posted_at": ts_dt.strftime("%Y-%m-%d"),
+                "posted_at": posted_at,
                 "layer": ts_dt.strftime("%Y"),
                 "media_urls": " ".join(media_urls),
                 "discord_url": build_discord_jump_url(primary_msg.get("guild_id"), channel_id, primary_id),
