@@ -239,8 +239,8 @@
   {
     "id": "discord-1528869548420497418",
     "place_name": "Paço da Liberdade, Curitiba, Brasil",
-    "lat": 34.0928092,
-    "lng": -118.3286614,
+    "lat": -25.4296637,
+    "lng": -49.2699801,
     "caption": "Curitiba, Brasil. With capy fren and hanging out on the Paço da Liberdade.",
     "author": "Squeaks (Michelle)",
     "posted_at": "2026-07-20",
@@ -590,6 +590,58 @@
     "layer": "2026",
     "media": [
       "https://juniormonkey.github.io/maggies-migrations/photos/discord-1561100515570487367-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1573809666155352136",
+    "place_name": "Yinzers in the Burgh, Pittsburgh",
+    "lat": 40.452284,
+    "lng": -79.982439,
+    "caption": "Greetings from Pittsburgh. It's literally why I decided I had to stop everything and take the photo. That and the Heinz factory building are literally the most Pittsburgh things I've seen in my life.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-11-21",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1573809666155352136-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1574152085530747022",
+    "place_name": "Museum of Illusions, Pittsburgh",
+    "lat": 40.4461041,
+    "lng": -80.0091921,
+    "caption": "Maggie at the Pittsburgh Museum of Illusions.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-11-22",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1574152085530747022-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1574152247590396026",
+    "place_name": "Heinz Factory, Pittsburgh",
+    "lat": 40.45445,
+    "lng": -79.991769,
+    "caption": "The OG Heinz factory!",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-11-22",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1574152247590396026-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1574259426565554367",
+    "place_name": "Monongahela Incline, Pittsburgh",
+    "lat": 40.431505,
+    "lng": -80.0057577,
+    "caption": "Maggie on the Monongahela Incline, overlooking central Pittsburgh.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-11-23",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1574259426565554367-1.jpg"
     ]
   }
 ]
