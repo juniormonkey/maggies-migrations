@@ -643,5 +643,35 @@
     "media": [
       "https://juniormonkey.github.io/maggies-migrations/photos/discord-1574259426565554367-1.jpg"
     ]
+  },
+  {
+    "id": "discord-1574821418368237569",
+    "place_name": "National Aviary, Pittsburgh",
+    "lat": 40.4534125,
+    "lng": -80.0099541,
+    "caption": "Maggie at the National Aviary in Pittsburgh. For the record, that pheasant was NOT pleased and totally pecked at the glass trying to attack Maggie. But she recovered her overwrought nerves with the help of Pittsburgh's own Clark bar.",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-11-24",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1574821418368237569-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1574821418368237569-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1574821781762740347-1.jpg"
+    ]
+  },
+  {
+    "id": "discord-1574875822794215485",
+    "place_name": "Phipps Conservatory, Pittsburgh",
+    "lat": 40.4389488,
+    "lng": -79.9476968,
+    "caption": "At the Phipps Conservatory (since the Museum of Natural History is closed on Tuesdays, apparently).",
+    "author": "Squeaks (Michelle)",
+    "posted_at": "2026-11-24",
+    "layer": "2026",
+    "media": [
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1574875822794215485-1.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1574875822794215485-2.jpg",
+      "https://juniormonkey.github.io/maggies-migrations/photos/discord-1574875822794215485-3.jpg"
+    ]
   }
 ]
